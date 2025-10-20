@@ -104,11 +104,17 @@ const Reports = () => {
 
       if (error) throw error;
       
-      if (data?.pdfUrl) {
-        window.open(data.pdfUrl, "_blank");
+      // Open the generated HTML in a new window for printing
+      const printWindow = window.open("", "_blank");
+      if (printWindow && data) {
+        printWindow.document.write(data);
+        printWindow.document.close();
       }
+      
+      toast.success("PDF generated successfully!");
     } catch (error: any) {
-      toast.error("PDF generation coming soon!");
+      console.error("PDF generation error:", error);
+      toast.error("Failed to generate PDF");
     }
   };
 
