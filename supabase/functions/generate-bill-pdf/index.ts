@@ -86,13 +86,13 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
   const itemsHTML = items
     .map(
       (item, idx) => `
-    <tr style="border-bottom: 1px solid #e5e7eb;">
-      <td style="padding: 12px 8px; text-align: center;">${idx + 1}</td>
-      <td style="padding: 12px 8px;">${item.product_code}</td>
-      <td style="padding: 12px 8px;">${item.product_name}</td>
-      <td style="padding: 12px 8px; text-align: center;">${item.quantity}</td>
-      <td style="padding: 12px 8px; text-align: right;">₹${item.unit_price.toFixed(2)}</td>
-      <td style="padding: 12px 8px; text-align: right; font-weight: 600;">₹${item.total_price.toFixed(2)}</td>
+    <tr>
+      <td style="padding: 8px; text-align: center; border: 1px solid #000;">${idx + 1}</td>
+      <td style="padding: 8px; border: 1px solid #000;">${item.product_name}</td>
+      <td style="padding: 8px; text-align: center; border: 1px solid #000;">${item.product_code}</td>
+      <td style="padding: 8px; text-align: center; border: 1px solid #000;">${item.quantity}</td>
+      <td style="padding: 8px; text-align: right; border: 1px solid #000;">₹${item.unit_price.toFixed(2)}</td>
+      <td style="padding: 8px; text-align: right; border: 1px solid #000;">₹${item.total_price.toFixed(2)}</td>
     </tr>
   `
     )
@@ -106,233 +106,160 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-      padding: 40px; 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
+      font-family: Arial, sans-serif; 
+      padding: 20px;
+      background: white;
     }
-    .invoice-container {
+    .bill-container {
       max-width: 800px;
       margin: 0 auto;
-      background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      border: 2px solid #000;
+      padding: 20px;
     }
     .header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 40px;
-      text-align: center;
-    }
-    .shop-name {
-      font-size: 32px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-    .shop-subtitle {
-      font-size: 14px;
-      opacity: 0.9;
-      letter-spacing: 1px;
-    }
-    .invoice-title {
-      background: #f9fafb;
-      padding: 20px 40px;
-      border-bottom: 3px solid #667eea;
-    }
-    .invoice-title h2 {
-      color: #1f2937;
-      font-size: 24px;
-      font-weight: 600;
-    }
-    .info-section {
       display: flex;
       justify-content: space-between;
-      padding: 30px 40px;
-      background: #ffffff;
-      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #000;
     }
-    .info-block {
-      flex: 1;
-    }
-    .info-label {
-      color: #6b7280;
+    .customer-info {
       font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 4px;
-      font-weight: 600;
     }
-    .info-value {
-      color: #1f2937;
-      font-size: 16px;
-      font-weight: 500;
+    .customer-name {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+    .shop-name {
+      text-align: center;
+      margin-bottom: 5px;
+    }
+    .shop-name h1 {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .shop-name p {
+      font-size: 12px;
+      margin-bottom: 2px;
     }
     .bill-details {
       display: flex;
-      gap: 20px;
+      justify-content: space-between;
+      margin: 15px 0;
+      padding: 10px 0;
+      border-top: 1px solid #000;
+      border-bottom: 1px solid #000;
     }
     .bill-detail-item {
-      background: #f3f4f6;
-      padding: 12px 16px;
-      border-radius: 8px;
+      font-size: 13px;
+    }
+    .bill-detail-item strong {
+      font-weight: bold;
+    }
+    .address-section {
+      margin: 10px 0;
+      padding: 8px;
+      border: 1px solid #000;
+      font-size: 13px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 20px 0;
+      margin: 15px 0;
     }
     th {
-      background: #667eea;
-      color: white;
-      padding: 14px 8px;
-      text-align: left;
+      background: white;
+      color: #000;
+      padding: 8px;
+      text-align: center;
       font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-weight: 600;
+      border: 1px solid #000;
+      font-weight: bold;
     }
-    th:nth-child(1), td:nth-child(1) { width: 50px; }
-    th:nth-child(4), td:nth-child(4) { text-align: center; width: 80px; }
-    th:nth-child(5), th:nth-child(6), td:nth-child(5), td:nth-child(6) { text-align: right; }
     td {
-      padding: 12px 8px;
-      color: #374151;
-      font-size: 14px;
+      font-size: 12px;
     }
     .total-section {
-      padding: 30px 40px;
-      background: #f9fafb;
-      border-top: 2px solid #667eea;
+      margin-top: 20px;
+      text-align: right;
+      padding: 15px;
+      border-top: 2px solid #000;
     }
     .total-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-    }
-    .total-label {
-      font-size: 18px;
-      color: #1f2937;
-      font-weight: 600;
-    }
-    .total-amount {
-      font-size: 32px;
-      font-weight: 700;
-      color: #667eea;
-    }
-    .payment-badge {
-      display: inline-block;
-      padding: 6px 16px;
-      background: #10b981;
-      color: white;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .footer {
-      padding: 30px 40px;
-      text-align: center;
-      background: white;
-      border-top: 1px solid #e5e7eb;
-    }
-    .footer-text {
-      color: #6b7280;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-    .thank-you {
-      font-size: 18px;
-      color: #667eea;
-      font-weight: 600;
+      font-size: 16px;
+      font-weight: bold;
       margin-bottom: 8px;
     }
+    .payment-info {
+      font-size: 13px;
+      margin-top: 5px;
+    }
     @media print {
-      body { background: white; padding: 0; }
-      .invoice-container { box-shadow: none; }
+      body { padding: 0; }
+      .bill-container { border: none; }
     }
   </style>
 </head>
 <body>
-  <div class="invoice-container">
+  <div class="bill-container">
     <div class="header">
-      <div class="shop-name">GANAPATI ELECTRONICS & EMITRA</div>
-      <div class="shop-subtitle">BATADU</div>
-    </div>
-    
-    <div class="invoice-title">
-      <h2>INVOICE / TAX INVOICE</h2>
-    </div>
-    
-    <div class="info-section">
-      <div class="info-block">
-        <div class="info-label">Customer Details</div>
-        <div class="info-value" style="font-size: 18px; margin-bottom: 8px;">${bill.customer_name}</div>
-        <div class="info-value" style="font-size: 14px; color: #6b7280;">📞 ${bill.customer_mobile}</div>
-        ${bill.customer_address ? `<div class="info-value" style="font-size: 14px; color: #6b7280; margin-top: 4px;">📍 ${bill.customer_address}</div>` : ""}
+      <div class="customer-info">
+        <div class="customer-name">${bill.customer_name}</div>
+        <div>${bill.customer_mobile}</div>
       </div>
-      
-      <div class="info-block" style="text-align: right;">
-        <div class="bill-details" style="justify-content: flex-end;">
-          <div class="bill-detail-item">
-            <div class="info-label">Bill No.</div>
-            <div class="info-value" style="font-family: monospace;">${bill.bill_number}</div>
-          </div>
-          <div class="bill-detail-item">
-            <div class="info-label">Date</div>
-            <div class="info-value">${formattedDate}</div>
-          </div>
-          <div class="bill-detail-item">
-            <div class="info-label">Time</div>
-            <div class="info-value">${formattedTime}</div>
-          </div>
-        </div>
-        <div style="margin-top: 12px;">
-          <span class="payment-badge">${bill.payment_method.toUpperCase()}</span>
-        </div>
+      <div class="customer-info" style="text-align: right;">
+        <div class="customer-name">बिल संख्या: ${bill.bill_number}</div>
+        <div>समय: ${formattedTime}</div>
       </div>
     </div>
     
-    <div style="padding: 0 40px;">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Code</th>
-            <th>Product</th>
-            <th>Qty</th>
-            <th>Price</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${itemsHTML}
-        </tbody>
-      </table>
+    <div class="shop-name">
+      <h1>GANPATI ELECTRONICS & E-SERVICES BATADU</h1>
+      <p>आप स्वतंत्र वाणो गदों वन भाकृड- बाटाडू</p>
     </div>
+    
+    <div class="bill-details">
+      <div class="bill-detail-item">
+        <strong>बिल नं.:</strong> ${bill.bill_number}
+      </div>
+      <div class="bill-detail-item">
+        <strong>दिनांक:</strong> ${formattedDate}
+      </div>
+    </div>
+    
+    <div class="address-section">
+      <strong>जीवोहार:</strong> ${bill.customer_address || 'N/A'}
+    </div>
+    
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 50px;">क्र.स.</th>
+          <th>विवरण</th>
+          <th style="width: 100px;">नामंबर</th>
+          <th style="width: 60px;">दर</th>
+          <th style="width: 100px;">रकम रु.</th>
+          <th style="width: 60px;">पै.</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsHTML}
+      </tbody>
+    </table>
     
     <div class="total-section">
       <div class="total-row">
-        <span class="total-label">TOTAL AMOUNT</span>
-        <span class="total-amount">₹${bill.total_amount.toFixed(2)}</span>
+        कुल रकम: ₹${bill.total_amount.toFixed(2)}
       </div>
-    </div>
-    
-    <div class="footer">
-      <div class="thank-you">Thank You for Your Business!</div>
-      <div class="footer-text">
-        For any queries, please contact us<br>
-        GANAPATI ELECTRONICS & EMITRA, BATADU
+      <div class="payment-info">
+        भुगतान विधि: ${bill.payment_method === 'cash' ? 'नकद' : 'मैनुअल'}
       </div>
     </div>
   </div>
   
   <script>
-    // Auto-print when loaded
     window.onload = function() {
       window.print();
     };
