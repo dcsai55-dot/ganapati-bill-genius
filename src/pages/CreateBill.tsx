@@ -6,464 +6,533 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Trash2, FileDown } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 interface Product {
-  id: string;
-  product_code: string;
-  name: string;
-  price: number;
-  stock: number;
+  id: string;
+  product_code: string;
+  name: string;
+  price: number;
+  stock: number;
 }
 
 interface BillItem {
-  product_id: string;
-  product_code: string;
-  product_name: string;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
+  product_id: string;
+  product_code: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
 }
 
 const CreateBill = () => {
-  const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [billItems, setBillItems] = useState<BillItem[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<string>("");
-  const [quantity, setQuantity] = useState<string>("1");
-  const [customerName, setCustomerName] = useState("");
-  const [customerMobile, setCustomerMobile] = useState("");
-  const [customerAddress, setCustomerAddress] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "manual">("cash");
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [billItems, setBillItems] = useState<BillItem[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<string>("");
+  const [quantity, setQuantity] = useState<string>("1");
+  const [customerName, setCustomerName] = useState("");
+  const [customerMobile, setCustomerMobile] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "manual">("cash");
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    checkAuth();
-    loadProducts();
-  }, []);
+  // --- New state based on PDF ---
+  const [paidAmount, setPaidAmount] = useState<string>(""); //  (PAID)
+  const [remarks, setRemarks] = useState<string>(""); //  (Remarks)
+  // -------------------------------
 
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-    }
-  };
+  useEffect(() => {
+    checkAuth();
+    loadProducts();
+  }, []);
 
-  const loadProducts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("name");
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+    }
+  };
 
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error: any) {
-      toast.error("Failed to load products");
-    }
-  };
+  const loadProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("name");
 
-  const addItem = () => {
-    if (!selectedProduct || !quantity) {
-      toast.error("Please select a product and enter quantity");
-      return;
-    }
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error: any) {
+      toast.error("Failed to load products");
+    }
+  };
 
-    const product = products.find((p) => p.id === selectedProduct);
-    if (!product) return;
+  const addItem = () => {
+    if (!selectedProduct || !quantity) {
+      toast.error("Please select a product and enter quantity");
+      return;
+    }
 
-    const qty = parseInt(quantity);
-    if (qty > product.stock) {
-      toast.error("Insufficient stock available");
-      return;
-    }
+    const product = products.find((p) => p.id === selectedProduct);
+    if (!product) return;
 
-    const existingItem = billItems.find((item) => item.product_id === product.id);
-    if (existingItem) {
-      toast.error("Product already added. Edit quantity in the table.");
-      return;
-    }
+    const qty = parseInt(quantity);
+    if (qty <= 0) {
+      toast.error("Quantity must be at least 1");
+      return;
+    }
+    if (qty > product.stock) {
+      toast.error("Insufficient stock available");
+      return;
+    }
 
-    const newItem: BillItem = {
-      product_id: product.id,
-      product_code: product.product_code,
-      product_name: product.name,
-      quantity: qty,
-      unit_price: product.price,
-      total_price: product.price * qty,
-    };
+    const existingItem = billItems.find((item) => item.product_id === product.id);
+    if (existingItem) {
+      toast.error("Product already added. Edit quantity in the table.");
+      return;
+    }
 
-    setBillItems([...billItems, newItem]);
-    setSelectedProduct("");
-    setQuantity("1");
-  };
+    const newItem: BillItem = {
+      product_id: product.id,
+      product_code: product.product_code,
+      product_name: product.name,
+      quantity: qty,
+      unit_price: product.price,
+      total_price: product.price * qty,
+    };
 
-  const removeItem = (productId: string) => {
-    setBillItems(billItems.filter((item) => item.product_id !== productId));
-  };
+    setBillItems([...billItems, newItem]);
+    setSelectedProduct("");
+    setQuantity("1");
+  };
 
-  const updateQuantity = (productId: string, newQty: number) => {
-    const product = products.find((p) => p.id === productId);
-    if (!product || newQty > product.stock) {
-      toast.error("Insufficient stock");
-      return;
-    }
+  const removeItem = (productId: string) => {
+    setBillItems(billItems.filter((item) => item.product_id !== productId));
+  };
 
-    setBillItems(
-      billItems.map((item) =>
-        item.product_id === productId
-          ? {
-              ...item,
-              quantity: newQty,
-              total_price: item.unit_price * newQty,
-            }
-          : item
-      )
-    );
-  };
+  const updateQuantity = (productId: string, newQty: number) => {
+    const product = products.find((p) => p.id === productId);
+    if (!product || newQty > product.stock) {
+      toast.error("Insufficient stock");
+      return;
+    }
 
-  const getTotalAmount = () => {
-    return billItems.reduce((sum, item) => sum + item.total_price, 0);
-  };
+    setBillItems(
+      billItems.map((item) =>
+        item.product_id === productId
+          ? {
+              ...item,
+              quantity: newQty < 1 ? 1 : newQty, // Ensure quantity doesn't go below 1
+              total_price: item.unit_price * (newQty < 1 ? 1 : newQty),
+            }
+          : item
+      )
+    );
+  };
 
-  const generateBillNumber = () => {
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const day = date.getDate().toString().padStart(2, "0");
-    const random = Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, "0");
-    return `GE${year}${month}${day}${random}`;
-  };
+  const getTotalAmount = () => {
+    return billItems.reduce((sum, item) => sum + item.total_price, 0);
+  };
 
-  const handleCreateBill = async () => {
-    if (!customerName || !customerMobile) {
-      toast.error("Please enter customer name and mobile number");
-      return;
-    }
+  const generateBillNumber = () => {
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    const random = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, "0");
+    return `GE${year}${month}${day}${random}`; // "GE" for Ganpati Electronics
+  };
 
-    if (billItems.length === 0) {
-      toast.error("Please add at least one product");
-      return;
-    }
+  const handleCreateBill = async () => {
+    if (!customerName || !customerMobile) { // [cite: 7]
+      toast.error("Please enter customer name and mobile number");
+      return;
+    }
 
-    setLoading(true);
+    if (billItems.length === 0) {
+      toast.error("Please add at least one product");
+      return;
+    }
 
-    try {
-      const billNumber = generateBillNumber();
-      const totalAmount = getTotalAmount();
+    setLoading(true);
 
-      // Check if customer exists
-      let customerId = null;
-      const { data: existingCustomer } = await supabase
-        .from("customers")
-        .select("id")
-        .eq("mobile", customerMobile)
-        .single();
+    try {
+      const billNumber = generateBillNumber(); // [cite: 5]
+      const totalAmount = getTotalAmount();
+      
+      // --- Calculate Paid/Unpaid ---
+      const paid = parseFloat(paidAmount) || 0;
+      const unpaid = totalAmount - paid;
+      // -----------------------------
 
-      if (existingCustomer) {
-        customerId = existingCustomer.id;
-        // Update customer info
-        await supabase
-          .from("customers")
-          .update({
-            name: customerName,
-            address: customerAddress,
-          })
-          .eq("id", customerId);
-      } else {
-        // Create new customer
-        const { data: newCustomer, error: customerError } = await supabase
-          .from("customers")
-          .insert({
-            name: customerName,
-            mobile: customerMobile,
-            address: customerAddress,
-          })
-          .select()
-          .single();
+      // Check if customer exists
+      let customerId = null;
+      const { data: existingCustomer } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("mobile", customerMobile)
+        .single();
 
-        if (customerError) throw customerError;
-        customerId = newCustomer.id;
-      }
+      if (existingCustomer) {
+        customerId = existingCustomer.id;
+        // Update customer info
+        await supabase
+          .from("customers")
+          .update({
+            name: customerName,
+            address: customerAddress, // [cite: 8]
+          })
+          .eq("id", customerId);
+      } else {
+        // Create new customer
+        const { data: newCustomer, error: customerError } = await supabase
+          .from("customers")
+          .insert({
+            name: customerName,
+            mobile: customerMobile,
+            address: customerAddress,
+          })
+          .select()
+          .single();
 
-      // Create bill
-      const { data: billData, error: billError } = await supabase
-        .from("bills")
-        .insert({
-          bill_number: billNumber,
-          customer_id: customerId,
-          customer_name: customerName,
-          customer_mobile: customerMobile,
-          customer_address: customerAddress,
-          total_amount: totalAmount,
-          payment_method: paymentMethod,
-        })
-        .select()
-        .single();
+        if (customerError) throw customerError;
+        customerId = newCustomer.id;
+      }
 
-      if (billError) throw billError;
+      // Create bill
+      const { data: billData, error: billError } = await supabase
+        .from("bills")
+        .insert({
+          bill_number: billNumber,
+          customer_id: customerId,
+          customer_name: customerName,
+          customer_mobile: customerMobile,
+          customer_address: customerAddress,
+          total_amount: totalAmount, //  (TOTAL)
+          payment_method: paymentMethod,
+          // --- Add new PDF fields to insert ---
+          paid_amount: paid, //  (PAID)
+          unpaid_amount: unpaid, //  (UNPAID)
+          remarks: remarks, //  (Remarks)
+          // ------------------------------------
+        })
+        .select()
+        .single();
 
-      // Create bill items
-      const billItemsData = billItems.map((item) => ({
-        bill_id: billData.id,
-        product_id: item.product_id,
-        product_code: item.product_code,
-        product_name: item.product_name,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price,
-      }));
+      if (billError) throw billError;
 
-      const { error: itemsError } = await supabase
-        .from("bill_items")
-        .insert(billItemsData);
+      // Create bill items
+      const billItemsData = billItems.map((item) => ({
+        bill_id: billData.id,
+        product_id: item.product_id,
+        product_code: item.product_code,
+        product_name: item.product_name, //  (PRODUCT NAME)
+        quantity: item.quantity, //  (QUANTITY)
+        unit_price: item.unit_price, //  (PRICE)
+        total_price: item.total_price, //  (AMOUNT)
+      }));
 
-      if (itemsError) throw itemsError;
+      const { error: itemsError } = await supabase
+        .from("bill_items")
+        .insert(billItemsData);
 
-      // Update product stock
-      for (const item of billItems) {
-        const product = products.find((p) => p.id === item.product_id);
-        if (product) {
-          await supabase
-            .from("products")
-            .update({ stock: product.stock - item.quantity })
-            .eq("id", item.product_id);
-        }
-      }
+      if (itemsError) throw itemsError;
 
-      toast.success(`Bill ${billNumber} created successfully!`);
-      
-      // Call edge function to generate PDF (will be created next)
-      try {
-        await supabase.functions.invoke("generate-bill-pdf", {
-          body: { billId: billData.id },
-        });
-      } catch (pdfError) {
-        console.error("PDF generation error:", pdfError);
-      }
+      // Update product stock
+      for (const item of billItems) {
+        const product = products.find((p) => p.id === item.product_id);
+        if (product) {
+          await supabase
+            .from("products")
+            .update({ stock: product.stock - item.quantity })
+            .eq("id", item.product_id);
+        }
+      }
 
-      // Reset form
-      setBillItems([]);
-      setCustomerName("");
-      setCustomerMobile("");
-      setCustomerAddress("");
-      setPaymentMethod("cash");
-      
-      navigate("/reports");
-    } catch (error: any) {
-      console.error("Error creating bill:", error);
-      toast.error(error.message || "Failed to create bill");
-    } finally {
-      setLoading(false);
-    }
-  };
+      toast.success(`Bill ${billNumber} created successfully!`);
+      
+      // Call edge function to generate PDF
+      try {
+        await supabase.functions.invoke("generate-bill-pdf", {
+          body: { billId: billData.id },
+        });
+      } catch (pdfError) {
+        console.error("PDF generation error:", pdfError);
+      }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-2xl font-bold">Create New Bill</h1>
-          </div>
-        </div>
-      </header>
+      // Reset form
+      setBillItems([]);
+      setCustomerName("");
+      setCustomerMobile("");
+      setCustomerAddress("");
+      setPaymentMethod("cash");
+      setPaidAmount(""); // Reset new fields
+      setRemarks(""); // Reset new fields
+      
+      navigate("/reports");
+    } catch (error: any) {
+      console.error("Error creating bill:", error);
+      toast.error(error.message || "Failed to create bill");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Add Products</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-4 mb-4">
-                  <div className="flex-1">
-                    <Label>Select Product</Label>
-                    <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose product" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {products.map((product) => (
-                          <SelectItem key={product.id} value={product.id}>
-                            {product.product_code} - {product.name} (Stock: {product.stock})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="w-32">
-                    <Label>Quantity</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex items-end">
-                    <Button onClick={addItem}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add
-                    </Button>
-                  </div>
-                </div>
+  // --- Calculate totals for display ---
+  const totalAmount = getTotalAmount();
+  const paid = parseFloat(paidAmount) || 0;
+  const unpaidAmount = totalAmount - paid;
+  // ------------------------------------
 
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Code</TableHead>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Qty</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {billItems.map((item) => (
-                      <TableRow key={item.product_id}>
-                        <TableCell className="font-mono">{item.product_code}</TableCell>
-                        <TableCell>{item.product_name}</TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={(e) =>
-                              updateQuantity(item.product_id, parseInt(e.target.value))
-                            }
-                            className="w-20"
-                          />
-                        </TableCell>
-                        <TableCell>₹{item.unit_price.toFixed(2)}</TableCell>
-                        <TableCell>₹{item.total_price.toFixed(2)}</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeItem(item.product_id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-card shadow-sm">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              {/* Updated Header based on PDF  */}
+              <h1 className="text-2xl font-bold">Ganpati Electronics & E Services</h1>
+              <p className="text-sm text-muted-foreground">Create New Bill</p>
+            </div>
+          </div>
+        </div>
+      </header>
 
-                {billItems.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">
-                    No products added yet
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+      <main className="container mx-auto px-4 py-8">
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Add Products</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col md:flex-row gap-4 mb-4">
+                  <div className="flex-1">
+                    <Label>Select Product</Label>
+                    <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose product" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.product_code} - {product.name} (Stock: {product.stock})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-full md:w-32">
+                    <Label>Quantity</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={quantity}
+                      onChange={(e) => setQuantity(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button onClick={addItem} className="w-full md:w-auto">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add
+                    </Button>
+                  </div>
+                </div>
 
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Customer Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="customerName">Name *</Label>
-                  <Input
-                    id="customerName"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customerMobile">Mobile *</Label>
-                  <Input
-                    id="customerMobile"
-                    type="tel"
-                    maxLength={15}
-                    value={customerMobile}
-                    onChange={(e) => setCustomerMobile(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customerAddress">Address</Label>
-                  <Textarea
-                    id="customerAddress"
-                    value={customerAddress}
-                    onChange={(e) => setCustomerAddress(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Payment Method</Label>
-                  <Select
-                    value={paymentMethod}
-                    onValueChange={(value: "cash" | "manual") => setPaymentMethod(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="manual">Manual</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]">S.R.</TableHead> {/*  */}
+                      <TableHead>Product</TableHead> {/*  */}
+                      <TableHead className="w-[100px]">Qty</TableHead> {/*  */}
+                      <TableHead>Price</TableHead> {/*  */}
+                      <TableHead>Amount</TableHead> {/*  */}
+                      <TableHead></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {billItems.map((item, index) => (
+                      <TableRow key={item.product_id}>
+                        <TableCell>{index + 1}</TableCell> {/*  (S.R) */}
+                        <TableCell>
+                          <div>{item.product_name}</div>
+                          <div className="text-xs text-muted-foreground font-mono">
+                            {item.product_code}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) =>
+                              updateQuantity(item.product_id, parseInt(e.target.value))
+                            }
+                            className="w-20"
+                          />
+          _              </TableCell>
+                        <TableCell>₹{item.unit_price.toFixed(2)}</TableCell>
+                        <TableCell>₹{item.total_price.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+              _             size="sm"
+                            onClick={() => removeItem(item.product_id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Bill Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between text-lg">
-                  <span>Items:</span>
-                  <span>{billItems.length}</span>
-                </div>
-                <div className="flex justify-between text-2xl font-bold">
-                  <span>Total:</span>
-                  <span>₹{getTotalAmount().toFixed(2)}</span>
-                </div>
-                <Button
-                  className="w-full"
-                  size="lg"
-                  onClick={handleCreateBill}
-                  disabled={loading || billItems.length === 0}
-                >
-                  <FileDown className="mr-2 h-5 w-5" />
-                  {loading ? "Creating..." : "Create Bill"}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+                {billItems.length === 0 && (
+                  <p className="text-center text-muted-foreground py-8">
+                    No products added yet
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Customer Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="customerName">Name *</Label> {/* [cite: 7] */}
+                  <Input
+                    id="customerName"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+          _           required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="customerMobile">Mobile *</Label>
+                  <Input
+                    id="customerMobile"
+                    type="tel"
+                    maxLength={15}
+                    value={customerMobile}
+                    onChange={(e) => setCustomerMobile(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="customerAddress">Address</Label> {/* [cite: 8] */}
+                  <Textarea
+                    id="customerAddress"
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Bill Summary & Payment</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between text-lg">
+                  <span>Items:</span>
+                  <span>{billItems.length}</span>
+                </div>
+                <div className="flex justify-between text-2xl font-bold">
+                  <span>Total:</span> {/*  (TOTAL) */}
+                  <span>₹{totalAmount.toFixed(2)}</span>
+                </div>
+
+                <hr />
+
+                {/* New Fields from PDF [cite: 10, 11, 12] */}
+                <div className="space-y-2">
+                  <Label htmlFor="paidAmount">Amount Paid</Label> {/*  (PAID) */}
+                  <Input
+                    id="paidAmount"
+                    type="number"
+                    min="0"
+                    value={paidAmount}
+                    onChange={(e) => setPaidAmount(e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="flex justify-between text-lg font-semibold text-destructive">
+                  <span>Unpaid:</span> {/*  (UNPAID) */}
+                  <span>₹{unpaidAmount.toFixed(2)}</span>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Payment Method</Label>
+                  <Select
+                    value={paymentMethod}
+                    onValueChange={(value: "cash" | "manual") => setPaymentMethod(value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cash">Cash</SelectItem>
+                      <SelectItem value="manual">Manual/Online</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="remarks">Remarks</Label> {/*  */}
+                  <Textarea
+                    id="remarks"
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    rows={2}
+                    placeholder="Add any notes..."
+                  />
+                </div>
+                {/* ------------------------------ */}
+
+                <Button
+                  className="w-full"
+                  size="lg"
+                  onClick={handleCreateBill}
+                  disabled={loading || billItems.length === 0}
+                >
+                  <FileDown className="mr-2 h-5 w-5" />
+                  {loading ? "Creating..." : "Create & Generate Bill"}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
 };
 
 export default CreateBill;
