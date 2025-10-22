@@ -102,29 +102,40 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
 <html>
 <head>
   <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
+    @page { size: A4; margin: 0; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
-      font-family: Arial, sans-serif; 
-      padding: 20px;
+      font-family: 'Poppins', sans-serif; 
+      padding: 15mm;
       background: white;
+      width: 210mm;
+      min-height: 297mm;
     }
     .bill-container {
-      max-width: 800px;
-      margin: 0 auto;
+      width: 100%;
       border: 2px solid #000;
-      padding: 20px;
+      padding: 15px;
     }
     .shop-header {
       text-align: center;
-      margin-bottom: 20px;
-      border-bottom: 2px solid #000;
+      margin-bottom: 15px;
       padding-bottom: 10px;
+      position: relative;
     }
     .shop-header h1 {
-      font-size: 24px;
-      font-weight: bold;
+      font-size: 28px;
+      font-weight: 700;
       margin-bottom: 5px;
+      text-decoration: underline;
+    }
+    .owner-names {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 8px;
     }
     .shop-header .address {
       font-size: 12px;
@@ -137,19 +148,22 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     .invoice-details {
       display: flex;
       justify-content: space-between;
-      margin: 15px 0;
-      padding: 10px 0;
-      border-bottom: 1px solid #000;
-      font-size: 14px;
+      margin: 12px 0;
+      padding: 8px 0;
+      border-top: 2px solid #000;
+      border-bottom: 2px solid #000;
+      font-size: 13px;
+      font-weight: 600;
     }
     .customer-section {
-      margin: 15px 0;
+      margin: 12px 0;
       padding: 10px;
       border: 1px solid #000;
+      border-bottom: 2px solid #000;
     }
     .customer-section h3 {
-      font-size: 14px;
-      font-weight: bold;
+      font-size: 13px;
+      font-weight: 700;
       margin-bottom: 8px;
     }
     .customer-section p {
@@ -166,9 +180,9 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
       color: #000;
       padding: 10px 8px;
       text-align: center;
-      font-size: 13px;
+      font-size: 12px;
       border: 1px solid #000;
-      font-weight: bold;
+      font-weight: 700;
     }
     td {
       padding: 8px;
@@ -233,7 +247,10 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     <div class="shop-header">
       <h1>GANPATI ELECTRONICS & E SERVICES</h1>
       <p class="address">Main Market Batadu, Barmer (Raj.) 344035</p>
-      <p class="contacts">Joga Ram 9928754381 &nbsp;&nbsp;&nbsp;&nbsp; Devendra Sai 7726969098</p>
+      <div class="owner-names">
+        <span>Joga Ram: 9928754381</span>
+        <span>Devendra Sai: 7726969098</span>
+      </div>
     </div>
     
     <div class="invoice-details">
@@ -242,7 +259,6 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     </div>
     
     <div class="customer-section">
-      <h3>CUSTOMER DETAILS:</h3>
       <p><strong>Name:</strong> ${bill.customer_name}</p>
       <p><strong>Mobile:</strong> ${bill.customer_mobile}</p>
       <p><strong>Address:</strong> ${bill.customer_address || 'N/A'}</p>
@@ -252,11 +268,11 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     <table>
       <thead>
         <tr>
-          <th style="width: 50px;">S.R</th>
-          <th>PRODUCT NAME</th>
-          <th style="width: 100px;">PRICE</th>
-          <th style="width: 80px;">QUANTITY</th>
-          <th style="width: 120px;">AMOUNT</th>
+          <th style="width: 40px;"><strong>SR</strong></th>
+          <th><strong>PRODUCT NAME</strong></th>
+          <th style="width: 90px;"><strong>PRICE</strong></th>
+          <th style="width: 70px;"><strong>QUANTITY</strong></th>
+          <th style="width: 100px;"><strong>AMOUNT</strong></th>
         </tr>
       </thead>
       <tbody>

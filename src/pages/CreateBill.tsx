@@ -266,6 +266,24 @@ const CreateBill = () => {
         console.error("PDF generation error:", pdfError);
       }
 
+      // Send SMS alert
+      try {
+        await supabase.functions.invoke("send-bill-sms", {
+          body: { 
+            mobile: customerMobile,
+            billNumber: billNumber,
+            customerName: customerName,
+            totalAmount: totalAmount,
+            paidAmount: paid,
+            unpaidAmount: unpaid
+          },
+        });
+        toast.success("SMS alert sent!");
+      } catch (smsError) {
+        console.error("SMS sending error:", smsError);
+        toast.error("Bill created but SMS failed to send");
+      }
+
       setBillItems([]);
       setCustomerName("");
       setCustomerMobile("");
