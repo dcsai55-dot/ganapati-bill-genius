@@ -81,7 +81,6 @@ serve(async (req) => {
 function generateBillHTML(bill: BillData, items: BillItem[]): string {
   const date = new Date(bill.created_at);
   const formattedDate = date.toLocaleDateString("en-IN");
-  const formattedTime = date.toLocaleTimeString("en-IN");
 
   const itemsHTML = items
     .map(
@@ -89,9 +88,8 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     <tr>
       <td style="padding: 8px; text-align: center; border: 1px solid #000;">${idx + 1}</td>
       <td style="padding: 8px; border: 1px solid #000;">${item.product_name}</td>
-      <td style="padding: 8px; text-align: center; border: 1px solid #000;">${item.product_code}</td>
-      <td style="padding: 8px; text-align: center; border: 1px solid #000;">${item.quantity}</td>
       <td style="padding: 8px; text-align: right; border: 1px solid #000;">₹${item.unit_price.toFixed(2)}</td>
+      <td style="padding: 8px; text-align: center; border: 1px solid #000;">${item.quantity}</td>
       <td style="padding: 8px; text-align: right; border: 1px solid #000;">₹${item.total_price.toFixed(2)}</td>
     </tr>
   `
@@ -116,53 +114,46 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
       border: 2px solid #000;
       padding: 20px;
     }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #000;
-    }
-    .customer-info {
-      font-size: 12px;
-    }
-    .customer-name {
-      font-weight: bold;
-      font-size: 14px;
-      margin-bottom: 2px;
-    }
-    .shop-name {
+    .shop-header {
       text-align: center;
-      margin-bottom: 5px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
     }
-    .shop-name h1 {
-      font-size: 20px;
+    .shop-header h1 {
+      font-size: 24px;
       font-weight: bold;
       margin-bottom: 5px;
     }
-    .shop-name p {
+    .shop-header .address {
       font-size: 12px;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
     }
-    .bill-details {
+    .shop-header .contacts {
+      font-size: 11px;
+      margin-top: 5px;
+    }
+    .invoice-details {
       display: flex;
       justify-content: space-between;
       margin: 15px 0;
       padding: 10px 0;
-      border-top: 1px solid #000;
       border-bottom: 1px solid #000;
+      font-size: 14px;
     }
-    .bill-detail-item {
-      font-size: 13px;
-    }
-    .bill-detail-item strong {
-      font-weight: bold;
-    }
-    .address-section {
-      margin: 10px 0;
-      padding: 8px;
+    .customer-section {
+      margin: 15px 0;
+      padding: 10px;
       border: 1px solid #000;
-      font-size: 13px;
+    }
+    .customer-section h3 {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .customer-section p {
+      font-size: 12px;
+      margin: 3px 0;
     }
     table {
       width: 100%;
@@ -172,29 +163,63 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     th {
       background: white;
       color: #000;
-      padding: 8px;
+      padding: 10px 8px;
       text-align: center;
       font-size: 13px;
       border: 1px solid #000;
       font-weight: bold;
     }
     td {
+      padding: 8px;
+      font-size: 12px;
+      border: 1px solid #000;
+    }
+    .summary-section {
+      margin-top: 20px;
+      border-top: 2px solid #000;
+      padding-top: 15px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 14px;
+    }
+    .summary-row.total {
+      font-size: 18px;
+      font-weight: bold;
+      border-top: 1px solid #000;
+      padding-top: 10px;
+      margin-top: 10px;
+    }
+    .summary-row.unpaid {
+      font-weight: bold;
+      color: #d32f2f;
+    }
+    .remarks-section {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #000;
+      min-height: 60px;
+    }
+    .remarks-section strong {
       font-size: 12px;
     }
-    .total-section {
-      margin-top: 20px;
-      text-align: right;
-      padding: 15px;
-      border-top: 2px solid #000;
-    }
-    .total-row {
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-    .payment-info {
-      font-size: 13px;
+    .remarks-section p {
+      font-size: 11px;
       margin-top: 5px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 2px solid #000;
+      font-size: 11px;
+    }
+    .signature-line {
+      margin-top: 30px;
+      text-align: right;
+      font-size: 12px;
     }
     @media print {
       body { padding: 0; }
@@ -204,44 +229,32 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
 </head>
 <body>
   <div class="bill-container">
-    <div class="header">
-      <div class="customer-info">
-        <div class="customer-name">${bill.customer_name}</div>
-        <div>${bill.customer_mobile}</div>
-      </div>
-      <div class="customer-info" style="text-align: right;">
-        <div class="customer-name">बिल संख्या: ${bill.bill_number}</div>
-        <div>समय: ${formattedTime}</div>
-      </div>
+    <div class="shop-header">
+      <h1>GANPATI ELECTRONICS & E SERVICES</h1>
+      <p class="address">Main Market Batadu, Barmer (Raj.) 344035</p>
+      <p class="contacts">Joga Ram 9928754381 &nbsp;&nbsp;&nbsp;&nbsp; Devendra Sai 7726969098</p>
     </div>
     
-    <div class="shop-name">
-      <h1>GANPATI ELECTRONICS & E-SERVICES BATADU</h1>
-      <p>आप स्वतंत्र वाणो गदों वन भाकृड- बाटाडू</p>
+    <div class="invoice-details">
+      <div><strong>Invoice No.</strong> ${bill.bill_number}</div>
+      <div><strong>Date:</strong> ${formattedDate}</div>
     </div>
     
-    <div class="bill-details">
-      <div class="bill-detail-item">
-        <strong>बिल नं.:</strong> ${bill.bill_number}
-      </div>
-      <div class="bill-detail-item">
-        <strong>दिनांक:</strong> ${formattedDate}
-      </div>
-    </div>
-    
-    <div class="address-section">
-      <strong>जीवोहार:</strong> ${bill.customer_address || 'N/A'}
+    <div class="customer-section">
+      <h3>CUSTOMER DETAILS:</h3>
+      <p><strong>Name:</strong> ${bill.customer_name}</p>
+      <p><strong>Mobile:</strong> ${bill.customer_mobile}</p>
+      <p><strong>Address:</strong> ${bill.customer_address || 'N/A'}</p>
     </div>
     
     <table>
       <thead>
         <tr>
-          <th style="width: 50px;">क्र.स.</th>
-          <th>विवरण</th>
-          <th style="width: 100px;">नामंबर</th>
-          <th style="width: 60px;">दर</th>
-          <th style="width: 100px;">रकम रु.</th>
-          <th style="width: 60px;">पै.</th>
+          <th style="width: 50px;">S.R</th>
+          <th>PRODUCT NAME</th>
+          <th style="width: 100px;">PRICE</th>
+          <th style="width: 80px;">QUANTITY</th>
+          <th style="width: 120px;">AMOUNT</th>
         </tr>
       </thead>
       <tbody>
@@ -249,13 +262,32 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
       </tbody>
     </table>
     
-    <div class="total-section">
-      <div class="total-row">
-        कुल रकम: ₹${bill.total_amount.toFixed(2)}
+    <div class="summary-section">
+      <div class="summary-row total">
+        <span>TOTAL</span>
+        <span>₹${bill.total_amount.toFixed(2)}</span>
       </div>
-      <div class="payment-info">
-        भुगतान विधि: ${bill.payment_method === 'cash' ? 'नकद' : 'मैनुअल'}
+      <div class="summary-row">
+        <span>PAID</span>
+        <span>₹${(bill as any).paid_amount ? (bill as any).paid_amount.toFixed(2) : '0.00'}</span>
       </div>
+      <div class="summary-row unpaid">
+        <span>UNPAID</span>
+        <span>₹${(bill as any).unpaid_amount ? (bill as any).unpaid_amount.toFixed(2) : bill.total_amount.toFixed(2)}</span>
+      </div>
+    </div>
+    
+    <div class="remarks-section">
+      <strong>Remarks:</strong>
+      <p>${(bill as any).remarks || 'None'}</p>
+    </div>
+    
+    <div class="signature-line">
+      Signature: _________________
+    </div>
+    
+    <div class="footer">
+      Generated on ${formattedDate} | Thank you!
     </div>
   </div>
   
