@@ -15,6 +15,7 @@ interface BillData {
   total_amount: number;
   payment_method: string;
   created_at: string;
+  description?: string;
 }
 
 interface BillItem {
@@ -245,6 +246,7 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
       <p><strong>Name:</strong> ${bill.customer_name}</p>
       <p><strong>Mobile:</strong> ${bill.customer_mobile}</p>
       <p><strong>Address:</strong> ${bill.customer_address || 'N/A'}</p>
+      ${bill.description ? `<p><strong>Description:</strong> ${bill.description}</p>` : ''}
     </div>
     
     <table>

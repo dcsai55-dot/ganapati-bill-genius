@@ -54,6 +54,7 @@ const CreateBill = () => {
   const [loading, setLoading] = useState(false);
   const [paidAmount, setPaidAmount] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
 
   useEffect(() => {
     checkAuth();
@@ -222,6 +223,7 @@ const CreateBill = () => {
           paid_amount: paid,
           unpaid_amount: unpaid,
           remarks: remarks,
+          description: description,
         })
         .select()
         .single();
@@ -271,6 +273,7 @@ const CreateBill = () => {
       setPaymentMethod("cash");
       setPaidAmount("");
       setRemarks("");
+      setDescription("");
       
       navigate("/reports");
     } catch (error: any) {
@@ -432,6 +435,16 @@ const CreateBill = () => {
                     value={customerAddress}
                     onChange={(e) => setCustomerAddress(e.target.value)}
                     rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    placeholder="Add product description or notes..."
                   />
                 </div>
               </CardContent>

@@ -73,6 +73,7 @@ export type Database = {
           customer_id: string | null
           customer_mobile: string
           customer_name: string
+          description: string | null
           id: string
           payment_method: string
           pdf_url: string | null
@@ -85,6 +86,7 @@ export type Database = {
           customer_id?: string | null
           customer_mobile: string
           customer_name: string
+          description?: string | null
           id?: string
           payment_method: string
           pdf_url?: string | null
@@ -97,6 +99,7 @@ export type Database = {
           customer_id?: string | null
           customer_mobile?: string
           customer_name?: string
+          description?: string | null
           id?: string
           payment_method?: string
           pdf_url?: string | null
