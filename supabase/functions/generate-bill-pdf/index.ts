@@ -13,9 +13,12 @@ interface BillData {
   customer_mobile: string;
   customer_address?: string;
   total_amount: number;
+  paid_amount: number;
+  unpaid_amount: number;
   payment_method: string;
   created_at: string;
   description?: string;
+  remarks?: string;
 }
 
 interface BillItem {
@@ -287,17 +290,17 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
       </div>
       <div class="summary-row">
         <span>PAID</span>
-        <span>₹${(bill as any).paid_amount ? (bill as any).paid_amount.toFixed(2) : '0.00'}</span>
+        <span>₹${bill.paid_amount.toFixed(2)}</span>
       </div>
       <div class="summary-row unpaid">
         <span>UNPAID</span>
-        <span>₹${(bill as any).unpaid_amount ? (bill as any).unpaid_amount.toFixed(2) : bill.total_amount.toFixed(2)}</span>
+        <span>₹${bill.unpaid_amount.toFixed(2)}</span>
       </div>
     </div>
     
     <div class="remarks-section">
       <strong>Remarks:</strong>
-      <p>${(bill as any).remarks || 'None'}</p>
+      <p>${bill.remarks || 'None'}</p>
     </div>
     
     <div class="signature-line">

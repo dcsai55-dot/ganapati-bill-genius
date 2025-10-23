@@ -12,8 +12,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft, FileDown, Eye } from "lucide-react";
+import { ArrowLeft, FileDown, Eye, Edit, MessageSquare } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +31,8 @@ interface Bill {
   customer_mobile: string;
   customer_address?: string;
   total_amount: number;
+  paid_amount: number;
+  unpaid_amount: number;
   payment_method: string;
   pdf_url?: string;
   created_at: string;
@@ -48,6 +52,9 @@ const Reports = () => {
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [billItems, setBillItems] = useState<BillItem[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [editingBill, setEditingBill] = useState<Bill | null>(null);
+  const [newPaidAmount, setNewPaidAmount] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -70,7 +77,15 @@ const Reports = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setBills(data || []);
+      
+      // Map the data to ensure paid_amount and unpaid_amount are present
+      const mappedBills = (data || []).map((bill: any) => ({
+        ...bill,
+        paid_amount: bill.paid_amount || 0,
+        unpaid_amount: bill.unpaid_amount ?? bill.total_amount
+      }));
+      
+      setBills(mappedBills);
     } catch (error: any) {
       toast.error("Failed to load bills");
     } finally {
@@ -115,6 +130,63 @@ const Reports = () => {
     } catch (error: any) {
       console.error("PDF generation error:", error);
       toast.error("Failed to generate PDF");
+    }
+  };
+
+  const getPaymentStatus = (bill: Bill) => {
+    if (bill.unpaid_amount === 0) return "paid";
+    if (bill.paid_amount === 0) return "unpaid";
+    return "partial";
+  };
+
+  const openPaymentDialog = (bill: Bill) => {
+    setEditingBill(bill);
+    setNewPaidAmount(bill.paid_amount.toString());
+    setPaymentDialogOpen(true);
+  };
+
+  const updatePaymentStatus = async () => {
+    if (!editingBill) return;
+    
+    try {
+      const paid = parseFloat(newPaidAmount) || 0;
+      const unpaid = editingBill.total_amount - paid;
+
+      const { error } = await supabase
+        .from("bills")
+        .update({ 
+          paid_amount: paid,
+          unpaid_amount: unpaid
+        } as any)
+        .eq("id", editingBill.id);
+
+      if (error) throw error;
+      
+      toast.success("Payment status updated!");
+      setPaymentDialogOpen(false);
+      loadBills();
+    } catch (error: any) {
+      toast.error("Failed to update payment status");
+    }
+  };
+
+  const sendSMS = async (bill: Bill) => {
+    try {
+      toast.info("Sending SMS...");
+      await supabase.functions.invoke("send-bill-sms", {
+        body: { 
+          mobile: bill.customer_mobile,
+          billNumber: bill.bill_number,
+          customerName: bill.customer_name,
+          totalAmount: bill.total_amount,
+          paidAmount: bill.paid_amount,
+          unpaidAmount: bill.unpaid_amount
+        },
+      });
+      toast.success("SMS sent successfully!");
+    } catch (error: any) {
+      console.error("SMS error:", error);
+      toast.error("Failed to send SMS");
     }
   };
 
@@ -184,51 +256,86 @@ const Reports = () => {
                     <TableHead>Customer</TableHead>
                     <TableHead>Mobile</TableHead>
                     <TableHead>Amount</TableHead>
-                    <TableHead>Payment</TableHead>
+                    <TableHead>Paid</TableHead>
+                    <TableHead>Unpaid</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {bills.map((bill) => (
-                    <TableRow key={bill.id}>
-                      <TableCell className="font-mono">{bill.bill_number}</TableCell>
-                      <TableCell>{bill.customer_name}</TableCell>
-                      <TableCell>{bill.customer_mobile}</TableCell>
-                      <TableCell className="font-semibold">
-                        ₹{bill.total_amount.toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={bill.payment_method === "cash" ? "default" : "secondary"}>
-                          {bill.payment_method}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(bill.created_at).toLocaleString("en-IN", {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        })}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => viewBillDetails(bill)}
+                  {bills.map((bill) => {
+                    const status = getPaymentStatus(bill);
+                    return (
+                      <TableRow key={bill.id}>
+                        <TableCell className="font-mono">{bill.bill_number}</TableCell>
+                        <TableCell>{bill.customer_name}</TableCell>
+                        <TableCell>{bill.customer_mobile}</TableCell>
+                        <TableCell className="font-semibold">
+                          ₹{bill.total_amount.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-green-600 font-semibold">
+                          ₹{bill.paid_amount.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-red-600 font-semibold">
+                          ₹{bill.unpaid_amount.toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={
+                              status === "paid" ? "default" : 
+                              status === "unpaid" ? "destructive" : 
+                              "secondary"
+                            }
                           >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => downloadPDF(bill.id)}
-                          >
-                            <FileDown className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            {status === "paid" ? "Paid" : status === "unpaid" ? "Unpaid" : "Partial"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(bill.created_at).toLocaleString("en-IN", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => viewBillDetails(bill)}
+                              title="View Details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openPaymentDialog(bill)}
+                              title="Edit Payment"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => downloadPDF(bill.id)}
+                              title="Download PDF"
+                            >
+                              <FileDown className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => sendSMS(bill)}
+                              title="Send SMS"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
@@ -270,6 +377,39 @@ const Reports = () => {
             <div className="flex justify-end text-xl font-bold border-t pt-4">
               Total: ₹{selectedBill?.total_amount.toFixed(2)}
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Payment Status</DialogTitle>
+            <DialogDescription>
+              Bill: {editingBill?.bill_number} - Total: ₹{editingBill?.total_amount.toFixed(2)}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="paidAmount">Amount Paid</Label>
+              <Input
+                id="paidAmount"
+                type="number"
+                min="0"
+                max={editingBill?.total_amount}
+                value={newPaidAmount}
+                onChange={(e) => setNewPaidAmount(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-between text-lg">
+              <span>Unpaid Amount:</span>
+              <span className="font-bold text-destructive">
+                ₹{((editingBill?.total_amount || 0) - (parseFloat(newPaidAmount) || 0)).toFixed(2)}
+              </span>
+            </div>
+            <Button onClick={updatePaymentStatus} className="w-full">
+              Update Payment
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

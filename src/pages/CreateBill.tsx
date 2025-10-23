@@ -41,9 +41,17 @@ interface BillItem {
   total_price: number;
 }
 
+interface Customer {
+  id: string;
+  name: string;
+  mobile: string;
+  address: string;
+}
+
 const CreateBill = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [billItems, setBillItems] = useState<BillItem[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("1");
@@ -59,6 +67,7 @@ const CreateBill = () => {
   useEffect(() => {
     checkAuth();
     loadProducts();
+    loadCustomers();
   }, []);
 
   const checkAuth = async () => {
@@ -79,6 +88,29 @@ const CreateBill = () => {
       setProducts(data || []);
     } catch (error: any) {
       toast.error("Failed to load products");
+    }
+  };
+
+  const loadCustomers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      setCustomers(data || []);
+    } catch (error: any) {
+      toast.error("Failed to load customers");
+    }
+  };
+
+  const selectCustomer = (customerId: string) => {
+    const customer = customers.find((c) => c.id === customerId);
+    if (customer) {
+      setCustomerName(customer.name);
+      setCustomerMobile(customer.mobile);
+      setCustomerAddress(customer.address || "");
     }
   };
 
@@ -426,6 +458,21 @@ const CreateBill = () => {
                 <CardTitle>Customer Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Select Existing Customer</Label>
+                  <Select onValueChange={selectCustomer}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose existing customer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name} - {customer.mobile}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="customerName">Name *</Label>
                   <Input
