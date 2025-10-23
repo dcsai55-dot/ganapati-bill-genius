@@ -40,9 +40,31 @@ Thank you for your business!`;
       throw new Error("SMS API key not configured");
     }
 
-    // TODO: Implement SMS sending based on chosen service
-    // Placeholder for SMS service integration
-    console.log("SMS would be sent:", message);
+    // Send SMS via D7 SMS API (RapidAPI)
+    const d7Response = await fetch("https://d7sms.p.rapidapi.com/messages/v1/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-rapidapi-host": "d7sms.p.rapidapi.com",
+        "x-rapidapi-key": smsApiKey,
+      },
+      body: JSON.stringify({
+        messages: [{
+          channel: "sms",
+          originator: "GanpatiElec",
+          recipients: [mobile],
+          content: message,
+          data_coding: "text"
+        }]
+      })
+    });
+
+    const d7Data = await d7Response.json();
+    console.log("D7 SMS Response:", d7Data);
+
+    if (!d7Response.ok) {
+      throw new Error(`SMS API error: ${JSON.stringify(d7Data)}`);
+    }
 
     return new Response(
       JSON.stringify({ 
