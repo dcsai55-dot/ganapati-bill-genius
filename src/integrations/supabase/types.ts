@@ -75,9 +75,12 @@ export type Database = {
           customer_name: string
           description: string | null
           id: string
+          paid_amount: number
           payment_method: string
           pdf_url: string | null
+          remarks: string | null
           total_amount: number
+          unpaid_amount: number
         }
         Insert: {
           bill_number: string
@@ -88,9 +91,12 @@ export type Database = {
           customer_name: string
           description?: string | null
           id?: string
+          paid_amount?: number
           payment_method: string
           pdf_url?: string | null
+          remarks?: string | null
           total_amount: number
+          unpaid_amount?: number
         }
         Update: {
           bill_number?: string
@@ -101,9 +107,12 @@ export type Database = {
           customer_name?: string
           description?: string | null
           id?: string
+          paid_amount?: number
           payment_method?: string
           pdf_url?: string | null
+          remarks?: string | null
           total_amount?: number
+          unpaid_amount?: number
         }
         Relationships: [
           {
