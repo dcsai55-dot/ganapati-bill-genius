@@ -9,7 +9,8 @@ import {
   FileText, 
   Package,
   LogOut,
-  AlertTriangle
+  AlertTriangle,
+  BarChart3
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -204,6 +205,23 @@ const Dashboard = () => {
             <CardContent>
               <p className="text-muted-foreground">
                 View bills history and generate reports
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+            onClick={() => navigate("/accounting")}
+          >
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Accounting
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Chart of Accounts and General Ledger
               </p>
             </CardContent>
           </Card>

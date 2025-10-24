@@ -298,6 +298,22 @@ const CreateBill = () => {
         console.error("PDF generation error:", pdfError);
       }
 
+      // Create journal entry for accounting
+      try {
+        await supabase.functions.invoke("create-journal-entry", {
+          body: {
+            billId: billData.id,
+            billNumber: billNumber,
+            totalAmount: totalAmount,
+            paidAmount: paid,
+            unpaidAmount: unpaid,
+            customerId: customerId,
+          },
+        });
+      } catch (journalError) {
+        console.error("Journal entry error:", journalError);
+      }
+
       // Send SMS alert
       try {
         await supabase.functions.invoke("send-bill-sms", {
