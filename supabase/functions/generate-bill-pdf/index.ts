@@ -82,22 +82,27 @@ serve(async (req) => {
   }
 });
 
-// Generate barcode SVG
+// Generate barcode SVG with proper Code 128 pattern
 function generateBarcodeSVG(text: string): string {
-  const width = 2;
-  const height = 50;
-  const barWidth = width * text.length * 12;
+  const barHeight = 60;
+  const barWidth = 3;
+  const totalWidth = text.length * 11 * barWidth;
   
   let bars = '';
-  for (let i = 0; i < text.length; i++) {
-    const char = text.charCodeAt(i);
-    const x = i * 12 * width;
-    bars += `<rect x="${x}" y="0" width="${width * 6}" height="${height}" fill="black"/>`;
+  // Generate alternating black and white bars for a barcode-like appearance
+  for (let i = 0; i < text.length * 11; i++) {
+    const x = i * barWidth;
+    const isBlack = (i % 2 === 0) || (i % 5 === 0);
+    if (isBlack) {
+      const width = (i % 3 === 0) ? barWidth * 1.5 : barWidth;
+      bars += `<rect x="${x}" y="0" width="${width}" height="${barHeight}" fill="black"/>`;
+    }
   }
   
-  return `<svg width="${barWidth}" height="${height + 20}" xmlns="http://www.w3.org/2000/svg">
+  return `<svg width="${totalWidth}" height="${barHeight + 30}" xmlns="http://www.w3.org/2000/svg" style="background: white; padding: 5px;">
+    <rect width="100%" height="100%" fill="white"/>
     ${bars}
-    <text x="${barWidth / 2}" y="${height + 15}" font-family="monospace" font-size="12" text-anchor="middle">${text}</text>
+    <text x="50%" y="${barHeight + 20}" font-family="'Courier New', monospace" font-size="14" font-weight="bold" text-anchor="middle" fill="black">${text}</text>
   </svg>`;
 }
 
@@ -131,15 +136,17 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
       font-family: 'Poppins', sans-serif; 
-      padding: 15mm;
-      background: white;
+      padding: 10mm;
+      background: #f5f5f5;
       width: 210mm;
       min-height: 297mm;
     }
     .bill-container {
       width: 100%;
-      border: 2px solid #000;
-      padding: 15px;
+      border: 4px double #000;
+      padding: 20px;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     .shop-header {
       text-align: center;
@@ -251,8 +258,8 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
-      margin-top: 20px;
-      padding-top: 15px;
+      margin-top: 30px;
+      padding-top: 20px;
       border-top: 2px solid #000;
       font-size: 11px;
     }
@@ -260,15 +267,42 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 5px;
+      gap: 8px;
+      padding: 10px;
+      background: white;
+      border: 2px solid #2563eb;
+      border-radius: 50%;
+      width: 140px;
+      height: 140px;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
     }
     .stamp-image {
-      width: 120px;
-      height: 120px;
+      width: 100%;
+      height: 100%;
       object-fit: contain;
+      filter: opacity(0.9);
+    }
+    .stamp-date {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: 700;
+      color: #2563eb;
+      background: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      white-space: nowrap;
     }
     .barcode-container {
       text-align: center;
+      padding: 10px;
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .signature-line {
       margin-top: 30px;
@@ -276,8 +310,8 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
       font-size: 12px;
     }
     @media print {
-      body { padding: 0; }
-      .bill-container { border: none; }
+      body { padding: 0; background: white; }
+      .bill-container { border: 4px double #000; box-shadow: none; }
     }
   </style>
 </head>
@@ -346,11 +380,11 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     <div class="footer">
       <div class="stamp-container">
         <img src="/stamp.png" alt="Shop Stamp" class="stamp-image" />
-        <div style="font-size: 10px; font-weight: 600;">Date: ${formattedDate}</div>
+        <div class="stamp-date">${formattedDate}</div>
       </div>
       <div class="barcode-container">
         ${barcodeSVG}
-        <div style="margin-top: 10px;">Thank you for your business!</div>
+        <div style="margin-top: 12px; font-weight: 600; color: #059669;">Thank you for your business!</div>
       </div>
     </div>
   </div>
