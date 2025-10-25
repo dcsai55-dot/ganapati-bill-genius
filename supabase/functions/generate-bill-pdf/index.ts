@@ -256,45 +256,12 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     }
     .footer {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
+      justify-content: center;
+      align-items: center;
       margin-top: 30px;
       padding-top: 20px;
       border-top: 2px solid #000;
       font-size: 11px;
-    }
-    .stamp-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      padding: 10px;
-      background: white;
-      border: 2px solid #2563eb;
-      border-radius: 50%;
-      width: 140px;
-      height: 140px;
-      position: relative;
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-    }
-    .stamp-image {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      filter: opacity(0.9);
-    }
-    .stamp-date {
-      position: absolute;
-      bottom: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 10px;
-      font-weight: 700;
-      color: #2563eb;
-      background: white;
-      padding: 2px 6px;
-      border-radius: 3px;
-      white-space: nowrap;
     }
     .barcode-container {
       text-align: center;
@@ -378,10 +345,6 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     </div>
     
     <div class="footer">
-      <div class="stamp-container">
-        <img src="/stamp.png" alt="Shop Stamp" class="stamp-image" />
-        <div class="stamp-date">${formattedDate}</div>
-      </div>
       <div class="barcode-container">
         ${barcodeSVG}
         <div style="margin-top: 12px; font-weight: 600; color: #059669;">Thank you for your business!</div>
