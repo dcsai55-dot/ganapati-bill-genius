@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import CreateBill from "./pages/CreateBill";
 import Customers from "./pages/Customers";
+import Bills from "./pages/Bills";
 import Reports from "./pages/Reports";
 import Accounting from "./pages/Accounting";
 import NotFound from "./pages/NotFound";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/products" element={<Products />} />
           <Route path="/create-bill" element={<CreateBill />} />
           <Route path="/customers" element={<Customers />} />
+          <Route path="/bills" element={<Bills />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/accounting" element={<Accounting />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

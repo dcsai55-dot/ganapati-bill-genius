@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -38,9 +39,12 @@ interface Product {
 const Products = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [stockFilter, setStockFilter] = useState("all");
   const [formData, setFormData] = useState({
     product_code: "",
     name: "",
@@ -54,6 +58,30 @@ const Products = () => {
     checkAuth();
     loadProducts();
   }, []);
+
+  useEffect(() => {
+    filterProducts();
+  }, [products, searchTerm, stockFilter]);
+
+  const filterProducts = () => {
+    let filtered = products;
+
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.product_code.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (stockFilter === "low") {
+      filtered = filtered.filter((p) => p.stock <= p.low_stock_threshold);
+    } else if (stockFilter === "in-stock") {
+      filtered = filtered.filter((p) => p.stock > p.low_stock_threshold);
+    }
+
+    setFilteredProducts(filtered);
+  };
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -269,6 +297,24 @@ const Products = () => {
             <CardTitle>Product Inventory</CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="flex gap-4 mb-6">
+              <Input
+                placeholder="Search by name or code..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+              />
+              <Select value={stockFilter} onValueChange={setStockFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by stock" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Products</SelectItem>
+                  <SelectItem value="in-stock">In Stock</SelectItem>
+                  <SelectItem value="low">Low Stock</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -281,7 +327,7 @@ const Products = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell className="font-mono">{product.product_code}</TableCell>
                     <TableCell>{product.name}</TableCell>

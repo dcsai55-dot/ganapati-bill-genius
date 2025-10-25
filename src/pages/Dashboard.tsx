@@ -194,6 +194,23 @@ const Dashboard = () => {
 
           <Card
             className="cursor-pointer hover:shadow-lg transition-all hover:scale-105"
+            onClick={() => navigate("/bills")}
+          >
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-secondary" />
+                View Bills
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Browse and search all bills with filters
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer hover:shadow-lg transition-all hover:scale-105"
             onClick={() => navigate("/reports")}
           >
             <CardHeader>

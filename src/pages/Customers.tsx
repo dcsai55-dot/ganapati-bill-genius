@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -25,12 +26,33 @@ interface Customer {
 const Customers = () => {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     checkAuth();
     loadCustomers();
   }, []);
+
+  useEffect(() => {
+    filterCustomers();
+  }, [customers, searchTerm]);
+
+  const filterCustomers = () => {
+    if (!searchTerm) {
+      setFilteredCustomers(customers);
+      return;
+    }
+
+    const filtered = customers.filter(
+      (c) =>
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.mobile.includes(searchTerm) ||
+        (c.address && c.address.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    setFilteredCustomers(filtered);
+  };
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -74,6 +96,14 @@ const Customers = () => {
             <CardTitle>Customer Directory</CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="mb-6">
+              <Input
+                placeholder="Search by name, mobile, or address..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+              />
+            </div>
             {loading ? (
               <p className="text-center text-muted-foreground py-8">Loading...</p>
             ) : customers.length === 0 ? (
@@ -91,7 +121,7 @@ const Customers = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {customers.map((customer) => (
+                  {filteredCustomers.map((customer) => (
                     <TableRow key={customer.id}>
                       <TableCell className="font-medium">{customer.name}</TableCell>
                       <TableCell>

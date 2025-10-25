@@ -82,9 +82,29 @@ serve(async (req) => {
   }
 });
 
+// Generate barcode SVG
+function generateBarcodeSVG(text: string): string {
+  const width = 2;
+  const height = 50;
+  const barWidth = width * text.length * 12;
+  
+  let bars = '';
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+    const x = i * 12 * width;
+    bars += `<rect x="${x}" y="0" width="${width * 6}" height="${height}" fill="black"/>`;
+  }
+  
+  return `<svg width="${barWidth}" height="${height + 20}" xmlns="http://www.w3.org/2000/svg">
+    ${bars}
+    <text x="${barWidth / 2}" y="${height + 15}" font-family="monospace" font-size="12" text-anchor="middle">${text}</text>
+  </svg>`;
+}
+
 function generateBillHTML(bill: BillData, items: BillItem[]): string {
   const date = new Date(bill.created_at);
-  const formattedDate = date.toLocaleDateString("en-IN");
+  const formattedDate = date.toLocaleDateString("en-IN", { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const barcodeSVG = generateBarcodeSVG(bill.bill_number);
 
   const itemsHTML = items
     .map(
@@ -228,11 +248,27 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
       margin-top: 5px;
     }
     .footer {
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
       margin-top: 20px;
       padding-top: 15px;
       border-top: 2px solid #000;
       font-size: 11px;
+    }
+    .stamp-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+    .stamp-image {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+    }
+    .barcode-container {
+      text-align: center;
     }
     .signature-line {
       margin-top: 30px;
@@ -308,7 +344,14 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     </div>
     
     <div class="footer">
-      Generated on ${formattedDate} | Thank you!
+      <div class="stamp-container">
+        <img src="/stamp.png" alt="Shop Stamp" class="stamp-image" />
+        <div style="font-size: 10px; font-weight: 600;">Date: ${formattedDate}</div>
+      </div>
+      <div class="barcode-container">
+        ${barcodeSVG}
+        <div style="margin-top: 10px;">Thank you for your business!</div>
+      </div>
     </div>
   </div>
   
