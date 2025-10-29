@@ -19,6 +19,15 @@ interface BillData {
   created_at: string;
   description?: string;
   remarks?: string;
+  due_date?: string;
+  tax_rate?: number;
+  tax_amount?: number;
+  discount_rate?: number;
+  discount_amount?: number;
+  subtotal?: number;
+  terms_conditions?: string;
+  bank_details?: string;
+  payment_status?: string;
 }
 
 interface BillItem {
@@ -109,6 +118,7 @@ function generateBarcodeSVG(text: string): string {
 function generateBillHTML(bill: BillData, items: BillItem[]): string {
   const date = new Date(bill.created_at);
   const formattedDate = date.toLocaleDateString("en-IN", { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const dueDate = bill.due_date ? new Date(bill.due_date).toLocaleDateString("en-IN", { day: '2-digit', month: '2-digit', year: 'numeric' }) : null;
   const barcodeSVG = generateBarcodeSVG(bill.bill_number);
 
   const itemsHTML = items
@@ -256,12 +266,29 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     }
     .footer {
       display: flex;
-      justify-content: center;
-      align-items: center;
+      justify-content: space-between;
+      align-items: flex-end;
       margin-top: 30px;
       padding-top: 20px;
       border-top: 2px solid #000;
       font-size: 11px;
+    }
+    .stamp-image {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+    }
+    .bank-details {
+      margin-top: 15px;
+      padding: 10px;
+      border: 1px solid #000;
+      background: #f9f9f9;
+      font-size: 11px;
+    }
+    .bank-details strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 12px;
     }
     .barcode-container {
       text-align: center;
@@ -296,6 +323,8 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     <div class="invoice-details">
       <div><strong>Invoice No.</strong> ${bill.bill_number}</div>
       <div><strong>Date:</strong> ${formattedDate}</div>
+      ${dueDate ? `<div><strong>Due Date:</strong> ${dueDate}</div>` : ''}
+      ${bill.payment_status ? `<div><strong>Status:</strong> ${bill.payment_status.toUpperCase()}</div>` : ''}
     </div>
     
     <div class="customer-section">
@@ -321,6 +350,21 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
     </table>
     
     <div class="summary-section">
+      ${bill.subtotal ? `
+      <div class="summary-row">
+        <span>SUBTOTAL</span>
+        <span>₹${bill.subtotal.toFixed(2)}</span>
+      </div>` : ''}
+      ${bill.discount_amount && bill.discount_amount > 0 ? `
+      <div class="summary-row">
+        <span>DISCOUNT ${bill.discount_rate ? `(${bill.discount_rate}%)` : ''}</span>
+        <span>-₹${bill.discount_amount.toFixed(2)}</span>
+      </div>` : ''}
+      ${bill.tax_amount && bill.tax_amount > 0 ? `
+      <div class="summary-row">
+        <span>TAX/GST ${bill.tax_rate ? `(${bill.tax_rate}%)` : ''}</span>
+        <span>₹${bill.tax_amount.toFixed(2)}</span>
+      </div>` : ''}
       <div class="summary-row total">
         <span>TOTAL</span>
         <span>₹${bill.total_amount.toFixed(2)}</span>
@@ -340,11 +384,24 @@ function generateBillHTML(bill: BillData, items: BillItem[]): string {
       <p>${bill.remarks || 'None'}</p>
     </div>
     
+    ${bill.terms_conditions ? `
+    <div class="remarks-section">
+      <strong>Terms & Conditions:</strong>
+      <p>${bill.terms_conditions}</p>
+    </div>` : ''}
+    
+    ${bill.bank_details ? `
+    <div class="bank-details">
+      <strong>Bank Details for Payment:</strong>
+      <p>${bill.bank_details}</p>
+    </div>` : ''}
+    
     <div class="signature-line">
       Signature: _________________
     </div>
     
     <div class="footer">
+      <img src="/shop-stamp.png" alt="Shop Stamp" class="stamp-image" />
       <div class="barcode-container">
         ${barcodeSVG}
         <div style="margin-top: 12px; font-weight: 600; color: #059669;">Thank you for your business!</div>

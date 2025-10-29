@@ -114,6 +114,7 @@ export type Database = {
       }
       bills: {
         Row: {
+          bank_details: string | null
           bill_number: string
           converted_to_bill_id: string | null
           created_at: string
@@ -123,16 +124,25 @@ export type Database = {
           customer_mobile: string
           customer_name: string
           description: string | null
+          discount_amount: number | null
+          discount_rate: number | null
+          due_date: string | null
           exchange_rate: number | null
           id: string
           paid_amount: number
           payment_method: string
+          payment_status: string | null
           pdf_url: string | null
           remarks: string | null
+          subtotal: number | null
+          tax_amount: number | null
+          tax_rate: number | null
+          terms_conditions: string | null
           total_amount: number
           unpaid_amount: number
         }
         Insert: {
+          bank_details?: string | null
           bill_number: string
           converted_to_bill_id?: string | null
           created_at?: string
@@ -142,16 +152,25 @@ export type Database = {
           customer_mobile: string
           customer_name: string
           description?: string | null
+          discount_amount?: number | null
+          discount_rate?: number | null
+          due_date?: string | null
           exchange_rate?: number | null
           id?: string
           paid_amount?: number
           payment_method: string
+          payment_status?: string | null
           pdf_url?: string | null
           remarks?: string | null
+          subtotal?: number | null
+          tax_amount?: number | null
+          tax_rate?: number | null
+          terms_conditions?: string | null
           total_amount: number
           unpaid_amount?: number
         }
         Update: {
+          bank_details?: string | null
           bill_number?: string
           converted_to_bill_id?: string | null
           created_at?: string
@@ -161,12 +180,20 @@ export type Database = {
           customer_mobile?: string
           customer_name?: string
           description?: string | null
+          discount_amount?: number | null
+          discount_rate?: number | null
+          due_date?: string | null
           exchange_rate?: number | null
           id?: string
           paid_amount?: number
           payment_method?: string
+          payment_status?: string | null
           pdf_url?: string | null
           remarks?: string | null
+          subtotal?: number | null
+          tax_amount?: number | null
+          tax_rate?: number | null
+          terms_conditions?: string | null
           total_amount?: number
           unpaid_amount?: number
         }
@@ -449,6 +476,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          description: string | null
+          expense_date: string
+          expense_number: string
+          id: string
+          payment_method: string
+          payment_status: string | null
+          receipt_url: string | null
+          tax_amount: number | null
+          total_amount: number
+          updated_at: string | null
+          vendor_mobile: string | null
+          vendor_name: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string | null
+          description?: string | null
+          expense_date?: string
+          expense_number: string
+          id?: string
+          payment_method: string
+          payment_status?: string | null
+          receipt_url?: string | null
+          tax_amount?: number | null
+          total_amount: number
+          updated_at?: string | null
+          vendor_mobile?: string | null
+          vendor_name: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          expense_date?: string
+          expense_number?: string
+          id?: string
+          payment_method?: string
+          payment_status?: string | null
+          receipt_url?: string | null
+          tax_amount?: number | null
+          total_amount?: number
+          updated_at?: string | null
+          vendor_mobile?: string | null
+          vendor_name?: string
+        }
+        Relationships: []
       }
       journal_entries: {
         Row: {
